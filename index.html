@@ -2441,6 +2441,56 @@ function clearTranslation() {
   updateCharCount();
 }
 
+// ════════════════════════════════
+//  ANTHROPIC API CALL (CORS-safe)
+// Works on GitHub Pages, localhost, and any static host
+// ════════════════════════════════
+async function callClaude(systemPrompt, userContent, maxTokens = 1000) {
+  const body = {
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: maxTokens,
+    messages: [{ role: 'user', content: userContent }]
+  };
+  if (systemPrompt) body.system = systemPrompt;
+
+  // Try direct first (works on localhost / claude.ai)
+  const directUrl = 'https://api.anthropic.com/v1/messages';
+  const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(directUrl);
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'x-api-key': apiKey,
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-direct-browser-access': 'true'
+  };
+
+  let res;
+  try {
+    res = await fetch(directUrl, { method: 'POST', headers, body: JSON.stringify(body) });
+    // If CORS blocked, browser throws before we get here
+  } catch (corsErr) {
+    // Fallback to CORS proxy
+    const proxyHeaders = {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    };
+    res = await fetch(proxyUrl, { method: 'POST', headers: proxyHeaders, body: JSON.stringify(body) });
+  }
+
+  // If response is not OK, also try proxy (e.g. 403 due to CORS policy)
+  if (!res.ok && res.status !== 200) {
+    const proxyHeaders = {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    };
+    res = await fetch(proxyUrl, { method: 'POST', headers: proxyHeaders, body: JSON.stringify(body) });
+  }
+
+  return res.json();
+}
+
 async function translateText() {
   if (!apiKey) { notify('Please add your API key in Settings first', true); openSettings(); return; }
   const text = document.getElementById('transInput').value.trim();
@@ -2453,24 +2503,8 @@ async function translateText() {
   spinner.style.display = 'block';
   out.innerHTML = '<span style="color:var(--text3)">Translating...</span>';
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: `Translate the following text from ${from === 'auto' ? 'the detected language' : langNames[from] || from} to ${langNames[to] || to}. Return ONLY the translated text, nothing else, no explanations, no quotes.\n\nText:\n${text}`
-        }]
-      })
-    });
-    const data = await res.json();
+    const prompt = `Translate the following text from ${from === 'auto' ? 'the detected language' : langNames[from] || from} to ${langNames[to] || to}. Return ONLY the translated text, nothing else, no explanations, no quotes.\n\nText:\n${text}`;
+    const data = await callClaude(null, prompt, 1000);
     spinner.style.display = 'none';
     if (data.error) { out.innerHTML = `<span style="color:var(--rose)">${data.error.message}</span>`; notify('API Error: ' + data.error.message, true); return; }
     if (!data.content || !data.content[0]) { out.innerHTML = '<span style="color:var(--rose)">Empty response.</span>'; return; }
@@ -2734,21 +2768,7 @@ Text to check:
 ${text}`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1500,
-        messages: [{role:'user',content:prompt}]
-      })
-    });
-    const data = await res.json();
+    const data = await callClaude(null, prompt, 1500);
     spinner.style.display='none';
     if (data.error) { out.innerHTML=`<span style="color:var(--rose)">${data.error.message}</span>`; notify('API Error: '+data.error.message,true); return; }
     if (!data.content||!data.content[0]) { out.innerHTML='<span style="color:var(--rose)">Empty response.</span>'; return; }
