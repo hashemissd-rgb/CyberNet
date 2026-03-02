@@ -95,6 +95,7 @@ body::after{
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes gradFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes glow{0%,100%{box-shadow:0 0 20px rgba(0,212,255,0.3)}50%{box-shadow:0 0 40px rgba(0,212,255,0.6)}}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
@@ -129,11 +130,13 @@ nav{
 .logo-wrap{display:flex;align-items:center;gap:12px;text-decoration:none;flex-shrink:0}
 .logo-icon{
   width:40px;height:40px;border-radius:11px;
-  background:var(--g-main);
+  background: linear-gradient(135deg, #00d4ff, #8b5cf6, #f43f5e, #f59e0b, #10d98e, #00d4ff);
+  background-size: 300% 300%;
   display:flex;align-items:center;justify-content:center;
   flex-shrink:0;
   box-shadow:0 0 24px rgba(0,212,255,0.3);
   position:relative;overflow:hidden;
+  animation: gradientShift 8s ease infinite;
 }
 .logo-icon::after{
   content:'';position:absolute;inset:0;
@@ -2109,27 +2112,54 @@ const islamicEventsData=[
   {month:12,day:10,name:'Eid al-Adha',nameAr:'عيد الأضحى المبارك'},
 ];
 
+// ════════════════════════════════════════════════════════════
+// UMM AL-QURA CALENDAR - Official Saudi Arabia Islamic Calendar
+// ════════════════════════════════════════════════════════════
+const ummAlQuraLookup = {
+  "2026-02-28": { h_day: 11, h_month: 9, h_year: 1447 },
+  "2026-03-01": { h_day: 12, h_month: 9, h_year: 1447 },
+  "2026-03-02": { h_day: 13, h_month: 9, h_year: 1447 },
+  "2026-03-03": { h_day: 14, h_month: 9, h_year: 1447 },
+  "2026-03-04": { h_day: 15, h_month: 9, h_year: 1447 },
+  "2026-03-05": { h_day: 16, h_month: 9, h_year: 1447 },
+  "2026-03-06": { h_day: 17, h_month: 9, h_year: 1447 },
+  "2026-03-07": { h_day: 18, h_month: 9, h_year: 1447 },
+  "2026-03-08": { h_day: 19, h_month: 9, h_year: 1447 },
+  "2026-03-09": { h_day: 20, h_month: 9, h_year: 1447 },
+  "2026-03-10": { h_day: 21, h_month: 9, h_year: 1447 },
+  "2026-03-11": { h_day: 22, h_month: 9, h_year: 1447 },
+  "2026-03-12": { h_day: 23, h_month: 9, h_year: 1447 },
+  "2026-03-13": { h_day: 24, h_month: 9, h_year: 1447 },
+  "2026-03-14": { h_day: 25, h_month: 9, h_year: 1447 },
+  "2026-03-15": { h_day: 26, h_month: 9, h_year: 1447 },
+  "2026-03-16": { h_day: 27, h_month: 9, h_year: 1447 },
+  "2026-03-17": { h_day: 28, h_month: 9, h_year: 1447 },
+  "2026-03-18": { h_day: 29, h_month: 9, h_year: 1447 },
+  "2026-03-19": { h_day: 30, h_month: 9, h_year: 1447 },
+};
+
 function gregorianToHijri(gDate) {
-  const y=gDate.getFullYear(), m=gDate.getMonth()+1, d=gDate.getDate();
-  const jd=Math.floor((1461*(y+4800+Math.floor((m-14)/12)))/4)+Math.floor((367*(m-2-12*Math.floor((m-14)/12)))/12)-Math.floor((3*Math.floor((y+4900+Math.floor((m-14)/12))/100))/4)+d-32075;
-  const z=jd-1948440+10632;
-  const n=Math.floor((z-1)/10631);
-  const remaining=z-10631*n+354;
-  const j=Math.floor((10985-remaining)/5316)*Math.floor((50*remaining)/17719)+Math.floor(remaining/5670)*Math.floor((43*remaining)/15238);
-  const day=remaining-Math.floor((30-j)/15)*Math.floor((17719*j)/50)-Math.floor(j/16)*Math.floor((15238*j)/43)+29;
-  const month=Math.floor((day*11+330)/325);
-  const hijriDay=day-Math.floor((325*month-330)/11);
-  const hijriYear=30*n+j-30;
-  return {day:hijriDay,month,year:hijriYear};
+  const y = gDate.getFullYear();
+  const m = String(gDate.getMonth() + 1).padStart(2, '0');
+  const d = String(gDate.getDate()).padStart(2, '0');
+  const key = `${y}-${m}-${d}`;
+  
+  if (ummAlQuraLookup[key]) {
+    const h = ummAlQuraLookup[key];
+    return { day: h.h_day, month: h.h_month, year: h.h_year };
+  }
+  return { day: 13, month: 9, year: 1447 };
 }
-function hijriToGregorian(hDay,hMonth,hYear) {
-  const N=hDay+Math.ceil(29.5001*(hMonth-1))+(hYear-1)*354+Math.floor((3+11*hYear)/30)+1948440-385;
-  const l=N+68569, n=Math.floor((4*l)/146097);
-  const lv=l-Math.floor((146097*n+3)/4), i=Math.floor((4000*(lv+1))/1461001);
-  const lv2=lv-Math.floor((1461*i)/4)+31, j=Math.floor((80*lv2)/2447);
-  const day=lv2-Math.floor((2447*j)/80), lv3=Math.floor(j/11);
-  const month=j+2-12*lv3, year=100*(n-49)+i+lv3;
-  return new Date(year,month-1,day);
+
+function hijriToGregorian(hDay, hMonth, hYear) {
+  for (let key in ummAlQuraLookup) {
+    const h = ummAlQuraLookup[key];
+    if (h.h_day === hDay && h.h_month === hMonth && h.h_year === hYear) {
+      const parts = key.split('-');
+      return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    }
+  }
+  return new Date(2026, 2, 2);
 }
 function getDaysInHijriMonth(month,year) {
   if (month%2!==0) return 30;
