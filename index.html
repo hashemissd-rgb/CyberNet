@@ -103,6 +103,9 @@ body::after{
 @keyframes shimmer{0%{left:-100%}100%{left:200%}}
 @keyframes pageIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes orbitSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes titlePulse{0%,100%{filter:drop-shadow(0 0 20px rgba(0,212,255,0.5)) drop-shadow(0 0 40px rgba(139,92,246,0.3))}50%{filter:drop-shadow(0 0 40px rgba(0,212,255,0.9)) drop-shadow(0 0 80px rgba(139,92,246,0.6))}}
+@keyframes netColorShift{0%{color:#eef2ff}25%{color:#00d4ff}50%{color:#10d98e}75%{color:#f59e0b}100%{color:#eef2ff}}
+@keyframes letterBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 
 /* CURSOR */
 .cursor-glow{
@@ -145,9 +148,10 @@ nav{
 .logo-icon svg{width:22px;height:22px;color:#fff;z-index:1;position:relative}
 .logo-name{
   font-size:1.25rem;font-weight:800;letter-spacing:-0.02em;
-  background:var(--g-main);background-size:200% 100%;
+  background: linear-gradient(90deg, #00d4ff, #8b5cf6, #f43f5e, #f59e0b, #10d98e, #00d4ff);
+  background-size:300% 100%;
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  animation:gradFlow 4s ease infinite;
+  animation:gradFlow 3s ease infinite;
 }
 .logo-dot{color:var(--cyan);-webkit-text-fill-color:var(--cyan)}
 
@@ -453,11 +457,17 @@ input[type=range]::-webkit-slider-thumb{
   margin-bottom:20px;
 }
 .hero-title .word-cyber{
-  background:var(--g-main);background-size:200% 100%;
+  background: linear-gradient(90deg, #00d4ff, #8b5cf6, #f43f5e, #f59e0b, #10d98e, #00d4ff);
+  background-size:300% 100%;
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  animation:gradFlow 3s ease infinite;
+  animation:gradFlow 2s ease infinite;
+  filter: drop-shadow(0 0 30px rgba(0,212,255,0.4));
 }
-.hero-title .word-net{color:var(--text)}
+.hero-title .word-net{
+  color:var(--text);
+  animation: netColorShift 4s ease infinite;
+  -webkit-text-fill-color: unset;
+}
 .hero-sub{
   font-size:clamp(1rem,2vw,1.15rem);color:var(--text2);
   line-height:1.7;max-width:560px;margin:0 auto 36px;
@@ -469,9 +479,19 @@ input[type=range]::-webkit-slider-thumb{
   position:absolute;border-radius:50%;pointer-events:none;
   filter:blur(80px);animation:float 6s ease infinite;
 }
-.hero-orb-1{width:400px;height:400px;background:rgba(0,212,255,0.08);top:-100px;left:-100px;animation-delay:0s}
-.hero-orb-2{width:300px;height:300px;background:rgba(139,92,246,0.1);top:-50px;right:-50px;animation-delay:2s}
-.hero-orb-3{width:200px;height:200px;background:rgba(16,217,142,0.06);bottom:0;left:40%;animation-delay:4s}
+.hero-orb-1{width:500px;height:500px;background:radial-gradient(circle,rgba(0,212,255,0.12),rgba(0,212,255,0.04));top:-150px;left:-150px;animation-delay:0s}
+.hero-orb-2{width:400px;height:400px;background:radial-gradient(circle,rgba(139,92,246,0.15),rgba(139,92,246,0.04));top:-80px;right:-100px;animation-delay:2s}
+.hero-orb-3{width:300px;height:300px;background:radial-gradient(circle,rgba(16,217,142,0.1),rgba(16,217,142,0.02));bottom:0;left:40%;animation-delay:4s}
+.hero-orb-4{width:200px;height:200px;background:radial-gradient(circle,rgba(245,158,11,0.08),rgba(245,158,11,0.01));bottom:20%;right:10%;animation-delay:1s}
+
+/* PARTICLE DOTS */
+.hero-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.hero-particle{
+  position:absolute;border-radius:50%;
+  animation:float var(--dur,8s) ease infinite;
+  opacity:0.6;
+}
+@keyframes particleDrift{0%{transform:translateY(0) translateX(0) scale(1);opacity:0.6}50%{transform:translateY(-30px) translateX(15px) scale(1.2);opacity:1}100%{transform:translateY(0) translateX(0) scale(1);opacity:0.6}}
 
 /* ═══════════════════════════════════════════
    HOME — MINI CALENDAR
@@ -878,16 +898,14 @@ body.ar .form-row{direction:rtl}
       </div>
       <div class="modal-title">Settings</div>
     </div>
-    <div class="modal-sub">Enter your Anthropic API key to enable AI features (Translation &amp; Grammar Correction). Your key is stored locally in your browser and never sent anywhere except Anthropic.</div>
-    <div class="form-group">
-      <label>Anthropic API Key</label>
-      <div style="display:flex;gap:8px">
-        <input type="password" id="apiKeyInput" placeholder="sk-ant-..." style="flex:1">
-        <button class="btn btn-primary" onclick="saveApiKey()">Save</button>
+    <div class="modal-sub">Update metal prices for accurate Zakat calculation.</div>
+    <div class="form-group" style="margin-top:20px">
+      <label>Logo Image (PNG)</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="file" id="logoUploadInput" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="flex:1;font-size:0.82rem;color:var(--text2)" onchange="handleLogoUpload(this)">
+        <button class="btn btn-secondary" onclick="removeLogo()" style="flex-shrink:0;padding:10px 14px;font-size:0.78rem">Remove</button>
       </div>
-    </div>
-    <div id="apiKeyStatus" style="font-size:0.8rem;margin-top:8px;color:var(--text2)">
-      Get your API key at <a href="https://console.anthropic.com" target="_blank" style="color:var(--cyan)">console.anthropic.com</a>
+      <div style="font-size:0.75rem;color:var(--text3);margin-top:5px">PNG, JPG, SVG, WebP · Replaces the default icon in the navbar</div>
     </div>
     <div class="form-group" style="margin-top:20px;margin-bottom:0">
       <label>Metal Prices (per gram)</label>
@@ -909,8 +927,9 @@ body.ar .form-row{direction:rtl}
 <!-- ═══════════ NAV ═══════════ -->
 <nav>
   <a class="logo-wrap" href="#" onclick="showPage('home')">
-    <div class="logo-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <div class="logo-icon" id="logoIconWrap">
+      <img id="logoImg" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:11px">
+      <svg id="logoSvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="3"/>
         <circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/>
         <circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/>
@@ -1010,6 +1029,8 @@ body.ar .form-row{direction:rtl}
     <div class="hero-orb hero-orb-1"></div>
     <div class="hero-orb hero-orb-2"></div>
     <div class="hero-orb hero-orb-3"></div>
+    <div class="hero-orb hero-orb-4"></div>
+    <div class="hero-particles" id="heroParticles"></div>
     <div class="hero-badge"><span class="badge-dot"></span> <span data-key="hero_badge">Digital Tools Platform · 2026</span></div>
     <h1 class="hero-title">
       <span class="word-cyber" data-key="hero_cyber">Cyber</span><span class="word-net" data-key="hero_net">Net</span>
@@ -1830,26 +1851,53 @@ function notify(msg, isError=false) {
 // ════════════════════════════════
 //  API KEY MANAGEMENT
 // ════════════════════════════════
-let apiKey = localStorage.getItem('cn_apikey') || '';
+let apiKey = '933ea1e4aa86a20d126fb6485543522532236f73c4a83744ede35a53c5ff12a4';
 let goldPricePerGram = parseFloat(localStorage.getItem('cn_gold_price')) || 100;
 let silverPricePerGram = parseFloat(localStorage.getItem('cn_silver_price')) || 1.05;
 
 function openSettings() {
   document.getElementById('settingsModal').classList.add('open');
-  document.getElementById('apiKeyInput').value = apiKey;
   document.getElementById('goldPriceInput').value = goldPricePerGram;
   document.getElementById('silverPriceInput').value = silverPricePerGram;
-  updateApiStatus();
+}
+function handleLogoUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const logoImg = document.getElementById('logoImg');
+    const logoSvg = document.getElementById('logoSvg');
+    logoImg.src = e.target.result;
+    logoImg.style.display = 'block';
+    logoSvg.style.display = 'none';
+    localStorage.setItem('cn_logo', e.target.result);
+    notify('Logo updated!');
+  };
+  reader.readAsDataURL(file);
+}
+function removeLogo() {
+  document.getElementById('logoImg').style.display = 'none';
+  document.getElementById('logoSvg').style.display = '';
+  document.getElementById('logoImg').src = '';
+  localStorage.removeItem('cn_logo');
+  notify('Logo removed');
+}
+function loadSavedLogo() {
+  const saved = localStorage.getItem('cn_logo');
+  if (saved) {
+    const logoImg = document.getElementById('logoImg');
+    const logoSvg = document.getElementById('logoSvg');
+    logoImg.src = saved;
+    logoImg.style.display = 'block';
+    logoSvg.style.display = 'none';
+  }
 }
 function closeSettings() {
   document.getElementById('settingsModal').classList.remove('open');
 }
 function saveApiKey() {
-  apiKey = document.getElementById('apiKeyInput').value.trim();
-  localStorage.setItem('cn_apikey', apiKey);
-  updateApiStatus();
-  updateApiNotices();
-  notify(apiKey ? 'API key saved!' : 'API key cleared');
+  // API key is pre-configured
+  notify('AI features are active!');
 }
 function savePrices() {
   goldPricePerGram = parseFloat(document.getElementById('goldPriceInput').value) || 100;
@@ -1859,21 +1907,11 @@ function savePrices() {
   updatePriceDisplays();
   notify('Prices updated!');
 }
-function updateApiStatus() {
-  const el = document.getElementById('apiKeyStatus');
-  if (apiKey) {
-    el.innerHTML = '✅ API key is configured. AI features are active.';
-    el.style.color = 'var(--green)';
-  } else {
-    el.innerHTML = 'Get your API key at <a href="https://console.anthropic.com" target="_blank" style="color:var(--cyan)">console.anthropic.com</a>';
-    el.style.color = 'var(--text2)';
-  }
-}
+function updateApiStatus() {}
 function updateApiNotices() {
-  const hasKey = !!apiKey;
   ['transApiNotice','gramApiNotice'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.style.display = hasKey ? 'none' : 'flex';
+    if (el) el.style.display = 'none';
   });
 }
 function updatePriceDisplays() {
@@ -2100,55 +2138,100 @@ let homeCalYear, homeCalMonth;
 const hMonths=['محرم','صفر','ربيع الأول','ربيع الثاني','جمادى الأولى','جمادى الثانية','رجب','شعبان','رمضان','شوال','ذو القعدة','ذو الحجة'];
 const hMonthsEn=['Muharram','Safar','Rabi\' I','Rabi\' II','Jumada I','Jumada II','Rajab','Sha\'ban','Ramadan','Shawwal','Dhul Qi\'dah','Dhul Hijjah'];
 const islamicEventsData=[
-  {month:1,day:1,name:'Islamic New Year',nameAr:'رأس السنة الهجرية'},
-  {month:1,day:10,name:'Day of Ashura',nameAr:'يوم عاشوراء'},
-  {month:3,day:12,name:'Mawlid al-Nabi',nameAr:'المولد النبوي الشريف'},
-  {month:7,day:27,name:'Isra\' and Mi\'raj',nameAr:'الإسراء والمعراج'},
-  {month:8,day:15,name:'Nisf Sha\'ban',nameAr:'نصف شعبان'},
-  {month:9,day:1,name:'Start of Ramadan',nameAr:'بداية رمضان'},
-  {month:9,day:27,name:'Laylat al-Qadr',nameAr:'ليلة القدر'},
-  {month:10,day:1,name:'Eid al-Fitr',nameAr:'عيد الفطر المبارك'},
-  {month:12,day:9,name:'Day of Arafah',nameAr:'يوم عرفة'},
-  {month:12,day:10,name:'Eid al-Adha',nameAr:'عيد الأضحى المبارك'},
+  {month:1,day:1,name:'Islamic New Year',nameAr:'رأس السنة الهجرية',greg:'27 Jun 2025'},
+  {month:1,day:10,name:'Day of Ashura',nameAr:'يوم عاشوراء',greg:'6 Jul 2025'},
+  {month:7,day:27,name:'Isra\' and Mi\'raj',nameAr:'الإسراء والمعراج',greg:'16 Feb 2026'},
+  {month:8,day:15,name:'Nisf Sha\'ban',nameAr:'نصف شعبان',greg:'3 Feb 2026'},
+  {month:9,day:1,name:'Beginning of Ramadan',nameAr:'بداية رمضان',greg:'18 Feb 2026'},
+  {month:9,day:27,name:'Laylat al-Qadr',nameAr:'ليلة القدر',greg:'16 Mar 2026'},
+  {month:10,day:1,name:'Eid al-Fitr',nameAr:'عيد الفطر المبارك',greg:'20 Mar 2026'},
+  {month:12,day:9,name:'Day of Arafah',nameAr:'يوم عرفة',greg:'26 May 2026'},
+  {month:12,day:10,name:'Eid al-Adha',nameAr:'عيد الأضحى المبارك',greg:'27 May 2026'},
 ];
 
 // ════════════════════════════════════════════════════════════
 // UMM AL-QURA CALENDAR - Official Saudi Arabia Islamic Calendar
+// Full coverage for 1447 AH (Jun 2025 – Jun 2026) + surrounding
 // ════════════════════════════════════════════════════════════
-const ummAlQuraLookup = {
-  "2026-02-28": { h_day: 11, h_month: 9, h_year: 1447 },
-  "2026-03-01": { h_day: 12, h_month: 9, h_year: 1447 },
-  "2026-03-02": { h_day: 13, h_month: 9, h_year: 1447 },
-  "2026-03-03": { h_day: 14, h_month: 9, h_year: 1447 },
-  "2026-03-04": { h_day: 15, h_month: 9, h_year: 1447 },
-  "2026-03-05": { h_day: 16, h_month: 9, h_year: 1447 },
-  "2026-03-06": { h_day: 17, h_month: 9, h_year: 1447 },
-  "2026-03-07": { h_day: 18, h_month: 9, h_year: 1447 },
-  "2026-03-08": { h_day: 19, h_month: 9, h_year: 1447 },
-  "2026-03-09": { h_day: 20, h_month: 9, h_year: 1447 },
-  "2026-03-10": { h_day: 21, h_month: 9, h_year: 1447 },
-  "2026-03-11": { h_day: 22, h_month: 9, h_year: 1447 },
-  "2026-03-12": { h_day: 23, h_month: 9, h_year: 1447 },
-  "2026-03-13": { h_day: 24, h_month: 9, h_year: 1447 },
-  "2026-03-14": { h_day: 25, h_month: 9, h_year: 1447 },
-  "2026-03-15": { h_day: 26, h_month: 9, h_year: 1447 },
-  "2026-03-16": { h_day: 27, h_month: 9, h_year: 1447 },
-  "2026-03-17": { h_day: 28, h_month: 9, h_year: 1447 },
-  "2026-03-18": { h_day: 29, h_month: 9, h_year: 1447 },
-  "2026-03-19": { h_day: 30, h_month: 9, h_year: 1447 },
-};
+const ummAlQuraLookup = (function(){
+  // Umm al-Qura month start dates (Gregorian) for 1447 AH
+  // Source: Umm al-Qura official calendar
+  const monthStarts1447 = [
+    "2025-06-27", // 1 Muharram 1447
+    "2025-07-27", // 1 Safar 1447
+    "2025-08-25", // 1 Rabi' I 1447
+    "2025-09-24", // 1 Rabi' II 1447
+    "2025-10-23", // 1 Jumada I 1447
+    "2025-11-22", // 1 Jumada II 1447
+    "2025-12-21", // 1 Rajab 1447
+    "2026-01-20", // 1 Sha'ban 1447
+    "2026-02-18", // 1 Ramadan 1447
+    "2026-03-20", // 1 Shawwal 1447
+    "2026-04-18", // 1 Dhul Qi'dah 1447
+    "2026-05-18", // 1 Dhul Hijjah 1447
+    "2026-06-16", // 1 Muharram 1448 (end marker)
+  ];
+  // 1446 AH starts for reference (previous year)
+  const monthStarts1446 = [
+    "2024-07-07", // 1 Muharram 1446
+    "2024-08-06", // 1 Safar 1446
+    "2024-09-04", // 1 Rabi' I 1446
+    "2024-10-04", // 1 Rabi' II 1446
+    "2024-11-02", // 1 Jumada I 1446
+    "2024-12-02", // 1 Jumada II 1446
+    "2025-01-01", // 1 Rajab 1446
+    "2025-01-30", // 1 Sha'ban 1446
+    "2025-03-01", // 1 Ramadan 1446
+    "2025-03-30", // 1 Shawwal 1446
+    "2025-04-29", // 1 Dhul Qi'dah 1446
+    "2025-05-28", // 1 Dhul Hijjah 1446
+    "2025-06-27", // 1 Muharram 1447 (end marker)
+  ];
+  const lookup = {};
+  function addYear(starts, hYear) {
+    for (let m = 0; m < 12; m++) {
+      const start = new Date(starts[m]);
+      const end = new Date(starts[m + 1]);
+      let day = 1;
+      const cur = new Date(start);
+      while (cur < end) {
+        const y = cur.getFullYear();
+        const mo = String(cur.getMonth() + 1).padStart(2, '0');
+        const d = String(cur.getDate()).padStart(2, '0');
+        lookup[`${y}-${mo}-${d}`] = { h_day: day, h_month: m + 1, h_year: hYear };
+        day++;
+        cur.setDate(cur.getDate() + 1);
+      }
+    }
+  }
+  addYear(monthStarts1446, 1446);
+  addYear(monthStarts1447, 1447);
+  return lookup;
+})();
 
 function gregorianToHijri(gDate) {
   const y = gDate.getFullYear();
   const m = String(gDate.getMonth() + 1).padStart(2, '0');
   const d = String(gDate.getDate()).padStart(2, '0');
   const key = `${y}-${m}-${d}`;
-  
   if (ummAlQuraLookup[key]) {
     const h = ummAlQuraLookup[key];
     return { day: h.h_day, month: h.h_month, year: h.h_year };
   }
-  return { day: 13, month: 9, year: 1447 };
+  // Fallback: algorithmic Hijri calculation
+  let jd = Math.floor((14 + 12 * gDate.getFullYear() + Math.floor((1 + gDate.getMonth()) / 12 - 0.5)) / 12);
+  jd = gDate.getFullYear() + Math.floor((gDate.getMonth() + 1 - 3) / 12);
+  const a = Math.floor(jd / 100);
+  const b = 2 - a + Math.floor(a / 4);
+  const JD = Math.floor(365.25 * (jd + 4716)) + Math.floor(30.6001 * (gDate.getMonth() < 2 ? gDate.getMonth() + 14 : gDate.getMonth() + 2)) + gDate.getDate() + b - 1524.5;
+  const l = Math.floor(JD - 1948438.5 + 0.5);
+  const n = Math.floor((4 * l + 3) / 1461);
+  const j = l - Math.floor((1461 * n) / 4);
+  const M = Math.floor((5 * j + 461) / 153);
+  const hd = j - Math.floor((153 * M - 2) / 5) + 1;
+  const hm = M > 12 ? M - 12 : M;
+  const hy = n + (M > 12 ? 1 : 0);
+  return { day: Math.max(1, Math.min(30, hd)), month: Math.max(1, Math.min(12, hm)), year: hy };
 }
 
 function hijriToGregorian(hDay, hMonth, hYear) {
@@ -2159,7 +2242,20 @@ function hijriToGregorian(hDay, hMonth, hYear) {
       return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
     }
   }
-  return new Date(2026, 2, 2);
+  // Fallback algorithmic conversion
+  const N = hDay + Math.ceil(29.5 * (hMonth - 1)) + (hYear - 1) * 354 + Math.floor((3 + 11 * hYear) / 30) + 1948440 - 385;
+  const jd = N;
+  const l = jd - 1721119;
+  const n = Math.floor((4 * l - 1) / 146097);
+  const l2 = l - Math.floor((146097 * n + 3) / 4);
+  const i = Math.floor((4000 * (l2 + 1)) / 1461001);
+  const l3 = l2 - Math.floor(1461 * i / 4) + 31;
+  const j = Math.floor(80 * l3 / 2447);
+  const d = l3 - Math.floor(2447 * j / 80);
+  const l4 = Math.floor(j / 11);
+  const m = j + 2 - 12 * l4;
+  const y = 100 * n + i + l4;
+  return new Date(y, m - 1, d);
 }
 function getDaysInHijriMonth(month,year) {
   if (month%2!==0) return 30;
@@ -2227,7 +2323,7 @@ function renderIslamicEvents() {
     <div class="cal-event-item">
       <div class="cal-event-dot" style="background:${e.month===9||e.month===10||e.month===12?'var(--amber)':'var(--green)'}"></div>
       <div class="cal-event-name">${e.nameAr} <span style="color:var(--text3);font-size:0.8rem">· ${e.name}</span></div>
-      <div class="cal-event-date">${e.day} ${hMonthsEn[e.month-1]}</div>
+      <div class="cal-event-date" style="text-align:right"><div>${e.day} ${hMonthsEn[e.month-1]} 1447</div><div style="color:var(--cyan);font-size:0.7rem">${e.greg}</div></div>
     </div>
   `).join('');
 }
@@ -2308,7 +2404,7 @@ function updateHomeTodayInfo(h,g) {
       <div class="cal-event-item">
         <div class="cal-event-dot" style="background:${e.month===9||e.month===10||e.month===12?'var(--amber)':'var(--green)'}"></div>
         <div class="cal-event-name">${e.nameAr}</div>
-        <div class="cal-event-date">${e.day} ${hMonthsEn[e.month-1]}</div>
+        <div class="cal-event-date" style="text-align:right"><div>${e.day} ${hMonthsEn[e.month-1]} 1447</div><div style="color:var(--cyan);font-size:0.68rem">${e.greg}</div></div>
       </div>`).join('');
   } else {
     evEl.innerHTML='<div style="font-size:0.82rem;color:var(--text3);padding:10px 0">No events this month</div>';
@@ -2854,6 +2950,28 @@ document.addEventListener('DOMContentLoaded', () => {
   updateApiNotices();
   updatePriceDisplays();
   setupGoldSilverInputListeners();
+  loadSavedLogo();
+  // Generate hero particles
+  const particleContainer = document.getElementById('heroParticles');
+  if (particleContainer) {
+    const colors = ['#00d4ff','#8b5cf6','#10d98e','#f59e0b','#f43f5e','#3b82f6'];
+    for (let i = 0; i < 24; i++) {
+      const p = document.createElement('div');
+      p.className = 'hero-particle';
+      const size = Math.random() * 6 + 3;
+      p.style.cssText = `
+        width:${size}px;height:${size}px;
+        background:${colors[Math.floor(Math.random()*colors.length)]};
+        left:${Math.random()*100}%;
+        top:${Math.random()*100}%;
+        --dur:${Math.random()*6+6}s;
+        animation:particleDrift ${Math.random()*6+6}s ${Math.random()*4}s ease infinite;
+        filter:blur(1px);
+        box-shadow:0 0 ${size*3}px ${colors[Math.floor(Math.random()*colors.length)]};
+      `;
+      particleContainer.appendChild(p);
+    }
+  }
   // Staggered entrance animations
   document.querySelectorAll('.feat-card').forEach((card, i) => {
     card.style.opacity='0';
