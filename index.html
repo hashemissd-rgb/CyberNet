@@ -1139,7 +1139,7 @@ body.ar .form-row{direction:rtl}
             </div>
           </div>
           <h3 data-key="f5_title">Grammar Correction</h3>
-          <p data-key="f5_desc">AI-powered grammar, spelling and style correction for both Arabic and English with explanations.</p>
+          <p data-key="f5_desc">Free grammar, spelling and style correction for Arabic and English — powered by LanguageTool.</p>
           <div class="feat-arrow">Open Tool <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
         </div>
         <div class="feat-card card-glow" onclick="showPage('imgtools')">
@@ -1387,13 +1387,9 @@ body.ar .form-row{direction:rtl}
     <div class="section-head">
       <div class="eyebrow" data-key="trans_eyebrow">AI Translation</div>
       <h2 class="section-title" data-key="trans_title">Translate <span class="grad">Any Language</span></h2>
-      <p class="section-sub" data-key="trans_sub">Powered by Claude AI — supports 15+ languages including Arabic</p>
+      <p class="section-sub" data-key="trans_sub">Free translation — supports 15+ languages including Arabic · No account needed</p>
     </div>
-    <div class="ai-tag">✦ AI Powered · Claude</div>
-    <div class="api-notice" id="transApiNotice" style="display:none">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      API key required. <a onclick="openSettings()">Add your API key in Settings</a> to use AI translation.
-    </div>
+    <div class="ai-tag" style="background:rgba(16,217,142,0.08);border-color:rgba(16,217,142,0.2);color:var(--green)">✦ Free · MyMemory API · No account needed</div>
 
     <div style="display:flex;gap:12px;align-items:flex-end;margin-bottom:20px;flex-wrap:wrap">
       <div style="flex:1;min-width:180px">
@@ -1851,7 +1847,7 @@ function notify(msg, isError=false) {
 // ════════════════════════════════
 //  API KEY MANAGEMENT
 // ════════════════════════════════
-let apiKey = '933ea1e4aa86a20d126fb6485543522532236f73c4a83744ede35a53c5ff12a4';
+// AI features replaced with free APIs — no key needed
 let goldPricePerGram = parseFloat(localStorage.getItem('cn_gold_price')) || 100;
 let silverPricePerGram = parseFloat(localStorage.getItem('cn_silver_price')) || 1.05;
 
@@ -2445,79 +2441,39 @@ function clearTranslation() {
 //  ANTHROPIC API CALL (CORS-safe)
 // Works on GitHub Pages, localhost, and any static host
 // ════════════════════════════════
-async function callClaude(systemPrompt, userContent, maxTokens = 1000) {
-  const body = {
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: maxTokens,
-    messages: [{ role: 'user', content: userContent }]
-  };
-  if (systemPrompt) body.system = systemPrompt;
-
-  // Try direct first (works on localhost / claude.ai)
-  const directUrl = 'https://api.anthropic.com/v1/messages';
-  const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(directUrl);
-
-  const headers = {
-    'Content-Type': 'application/json',
-    'x-api-key': apiKey,
-    'anthropic-version': '2023-06-01',
-    'anthropic-dangerous-direct-browser-access': 'true'
-  };
-
-  let res;
-  try {
-    res = await fetch(directUrl, { method: 'POST', headers, body: JSON.stringify(body) });
-    // If CORS blocked, browser throws before we get here
-  } catch (corsErr) {
-    // Fallback to CORS proxy
-    const proxyHeaders = {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    };
-    res = await fetch(proxyUrl, { method: 'POST', headers: proxyHeaders, body: JSON.stringify(body) });
-  }
-
-  // If response is not OK, also try proxy (e.g. 403 due to CORS policy)
-  if (!res.ok && res.status !== 200) {
-    const proxyHeaders = {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    };
-    res = await fetch(proxyUrl, { method: 'POST', headers: proxyHeaders, body: JSON.stringify(body) });
-  }
-
-  return res.json();
-}
-
+// ════════════════════════════════
+//  TRANSLATION — MyMemory Free API
+//  No key needed, works everywhere
+// ════════════════════════════════
 async function translateText() {
-  if (!apiKey) { notify('Please add your API key in Settings first', true); openSettings(); return; }
   const text = document.getElementById('transInput').value.trim();
   if (!text) { notify('Enter text to translate', true); return; }
   const from = document.getElementById('transFrom').value;
   const to = document.getElementById('transTo').value;
   const spinner = document.getElementById('transSpinner');
   const out = document.getElementById('transOutput');
-  const langNames = {en:'English',ar:'Arabic',fr:'French',es:'Spanish',de:'German',it:'Italian',pt:'Portuguese',ru:'Russian',zh:'Chinese',ja:'Japanese',ko:'Korean',tr:'Turkish',fa:'Persian',ur:'Urdu',he:'Hebrew',auto:'auto-detected language'};
   spinner.style.display = 'block';
   out.innerHTML = '<span style="color:var(--text3)">Translating...</span>';
+  const langPair = (from === 'auto' ? 'autodetect' : from) + '|' + to;
+  const url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text) + '&langpair=' + encodeURIComponent(langPair);
   try {
-    const prompt = `Translate the following text from ${from === 'auto' ? 'the detected language' : langNames[from] || from} to ${langNames[to] || to}. Return ONLY the translated text, nothing else, no explanations, no quotes.\n\nText:\n${text}`;
-    const data = await callClaude(null, prompt, 1000);
+    const res = await fetch(url);
+    const data = await res.json();
     spinner.style.display = 'none';
-    if (data.error) { out.innerHTML = `<span style="color:var(--rose)">${data.error.message}</span>`; notify('API Error: ' + data.error.message, true); return; }
-    if (!data.content || !data.content[0]) { out.innerHTML = '<span style="color:var(--rose)">Empty response.</span>'; return; }
-    const translated = data.content.map(c => c.text || '').join('');
+    if (data.responseStatus !== 200 && data.responseStatus !== '200') {
+      out.innerHTML = '<span style="color:var(--rose)">Translation failed: ' + (data.responseDetails || 'Unknown error') + '</span>';
+      notify('Translation failed', true);
+      return;
+    }
+    const translated = data.responseData.translatedText;
     out.textContent = translated;
     const isRTL = ['ar','fa','ur','he'].includes(to);
     out.style.direction = isRTL ? 'rtl' : 'ltr';
-    if (to === 'ar' || to === 'fa' || to === 'ur') out.style.fontFamily = 'var(--arabic)';
-    else out.style.fontFamily = '';
+    out.style.fontFamily = ['ar','fa','ur'].includes(to) ? 'var(--arabic)' : '';
     notify('Translation complete!');
   } catch(e) {
     spinner.style.display = 'none';
-    out.innerHTML = '<span style="color:var(--rose)">Connection error. Check your API key and try again.</span>';
+    out.innerHTML = '<span style="color:var(--rose)">Connection error. Please check your internet.</span>';
     notify('Connection error', true);
   }
 }
@@ -2742,80 +2698,81 @@ function applyCorrected() {
 }
 
 async function checkGrammar() {
-  if (!apiKey) { notify('Please add your API key in Settings first', true); openSettings(); return; }
   const text = document.getElementById('gramInput').value.trim();
   if (!text) { notify('Enter text first', true); return; }
   const isAr = document.querySelector('#gramTabs .tab-btn.active').textContent.includes('العربية');
-  const lang = isAr ? 'Arabic' : 'English';
+  const langCode = isAr ? 'ar' : 'en-US';
   const spinner = document.getElementById('gramSpinner');
   const out = document.getElementById('gramOutput');
   spinner.style.display='block';
   out.innerHTML='<span style="color:var(--text3)">Checking...</span>';
   document.getElementById('gramErrors').style.display='none';
   document.getElementById('gramScore').style.display='none';
-
-  const prompt = `You are an expert ${lang} grammar checker. Analyze this text and return a JSON object with this EXACT structure (no extra text, just JSON):
-{
-  "corrected": "corrected text here",
-  "score": 85,
-  "errors": [
-    {"type":"grammar","original":"wrong text","suggestion":"correct text","explanation":"why"}
-  ],
-  "tips": ["tip1","tip2","tip3"]
-}
-
-Text to check:
-${text}`;
-
   try {
-    const data = await callClaude(null, prompt, 1500);
+    const formData = new URLSearchParams();
+    formData.append('text', text);
+    formData.append('language', langCode);
+    const res = await fetch('https://api.languagetool.org/v2/check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData.toString()
+    });
+    const data = await res.json();
     spinner.style.display='none';
-    if (data.error) { out.innerHTML=`<span style="color:var(--rose)">${data.error.message}</span>`; notify('API Error: '+data.error.message,true); return; }
-    if (!data.content||!data.content[0]) { out.innerHTML='<span style="color:var(--rose)">Empty response.</span>'; return; }
-    try {
-      const raw = data.content.map(c=>c.text||'').join('');
-      const json = JSON.parse(raw.replace(/```json|```/g,'').trim());
-      correctedTextCache = json.corrected||text;
-      out.textContent = json.corrected||text;
-      out.style.direction = isAr?'rtl':'ltr';
-      out.style.fontFamily = isAr?'var(--arabic)':'';
-      // Score
-      const scoreEl=document.getElementById('gramScore');
-      const circle=document.getElementById('gramScoreCircle');
-      const scoreLabel=document.getElementById('gramScoreLabel');
-      const score=json.score||100;
-      circle.textContent=score;
-      circle.style.borderColor=score>=80?'var(--green)':score>=60?'var(--amber)':'var(--rose)';
-      circle.style.color=score>=80?'var(--green)':score>=60?'var(--amber)':'var(--rose)';
-      circle.style.boxShadow=`0 0 20px ${score>=80?'rgba(16,217,142,0.2)':score>=60?'rgba(245,158,11,0.2)':'rgba(244,63,94,0.2)'}`;
-      scoreLabel.textContent=score>=90?'Excellent!':score>=75?'Good':score>=60?'Needs Work':'Needs Improvement';
-      scoreEl.style.display='block';
-      // Errors
-      if(json.errors&&json.errors.length>0) {
-        const errSection=document.getElementById('gramErrors');
-        document.getElementById('gramErrorItems').innerHTML=json.errors.map(e=>`
-          <div class="error-item ${e.type}">
-            <span class="error-type-badge ${e.type}">${e.type}</span>
-            <div><span class="error-original">${e.original}</span> <span style="color:var(--text3)">→</span> <span class="error-suggestion">${e.suggestion}</span></div>
-            <div class="error-explanation">${e.explanation}</div>
-          </div>`).join('');
-        errSection.style.display='block';
-      }
-      // Tips
-      if(json.tips&&json.tips.length>0) {
-        document.getElementById('gramTips').innerHTML=json.tips.map(t=>
-          `<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:12px 14px;border-radius:10px;font-size:0.83rem;color:var(--text2);line-height:1.5">💡 ${t}</div>`
-        ).join('');
-      }
-      notify(`Grammar check complete — Score: ${json.score}/100`);
-    } catch(e) {
-      out.innerHTML='<span style="color:var(--rose)">Error parsing AI response. Please try again.</span>';
-      notify('Parse error',true);
+    const matches = data.matches || [];
+    // Build corrected text
+    let corrected = text;
+    let offset = 0;
+    const sorted = [...matches].sort((a,b) => a.offset - b.offset);
+    for (const m of sorted) {
+      if (!m.replacements || !m.replacements.length) continue;
+      const fix = m.replacements[0].value;
+      corrected = corrected.slice(0, m.offset + offset) + fix + corrected.slice(m.offset + offset + m.length);
+      offset += fix.length - m.length;
     }
+    correctedTextCache = corrected;
+    out.textContent = corrected;
+    out.style.direction = isAr ? 'rtl' : 'ltr';
+    out.style.fontFamily = isAr ? 'var(--arabic)' : '';
+    // Score
+    const score = Math.max(0, Math.round(100 - (matches.length * 8)));
+    const scoreEl = document.getElementById('gramScore');
+    const circle = document.getElementById('gramScoreCircle');
+    const scoreLabel = document.getElementById('gramScoreLabel');
+    circle.textContent = score;
+    circle.style.borderColor = score>=80?'var(--green)':score>=60?'var(--amber)':'var(--rose)';
+    circle.style.color = score>=80?'var(--green)':score>=60?'var(--amber)':'var(--rose)';
+    circle.style.boxShadow = '0 0 20px ' + (score>=80?'rgba(16,217,142,0.2)':score>=60?'rgba(245,158,11,0.2)':'rgba(244,63,94,0.2)');
+    scoreLabel.textContent = score>=90?'Excellent!':score>=75?'Good':score>=60?'Needs Work':'Needs Improvement';
+    scoreEl.style.display='block';
+    // Errors
+    if (matches.length > 0) {
+      const errSection = document.getElementById('gramErrors');
+      document.getElementById('gramErrorItems').innerHTML = matches.slice(0,10).map(m => {
+        const fix = m.replacements && m.replacements[0] ? m.replacements[0].value : '—';
+        const orig = text.slice(m.offset, m.offset + m.length) || m.context.text.slice(m.context.offset, m.context.offset + m.context.length);
+        const type = m.rule.issueType || 'grammar';
+        return '<div class="error-item ' + type + '"><span class="error-type-badge ' + type + '">' + type + '</span><div><span class="error-original">' + orig + '</span> <span style="color:var(--text3)">→</span> <span class="error-suggestion">' + fix + '</span></div><div class="error-explanation">' + m.message + '</div></div>';
+      }).join('');
+      errSection.style.display='block';
+    }
+    // Tips
+    const tips = [];
+    if (matches.length === 0) tips.push('Great job! No errors found.');
+    else {
+      const types = [...new Set(matches.map(m => m.rule.issueType))];
+      if (types.includes('misspelling')) tips.push('Check your spelling carefully before submitting.');
+      if (types.includes('grammar')) tips.push('Review subject-verb agreement and sentence structure.');
+      tips.push('Read your text aloud to catch mistakes more easily.');
+    }
+    document.getElementById('gramTips').innerHTML = tips.map(t =>
+      '<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:12px 14px;border-radius:10px;font-size:0.83rem;color:var(--text2);line-height:1.5">💡 ' + t + '</div>'
+    ).join('');
+    notify('Grammar check complete — Score: ' + score + '/100');
   } catch(e) {
     spinner.style.display='none';
-    out.innerHTML='<span style="color:var(--rose)">Connection error. Check your API key.</span>';
-    notify('Connection error',true);
+    out.innerHTML='<span style="color:var(--rose)">Connection error. Please check your internet.</span>';
+    notify('Connection error', true);
   }
 }
 
